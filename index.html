@@ -6,209 +6,117 @@
 <title>Shake a Sloth</title>
 
 <style>
-* {
-  box-sizing: border-box;
+body {
   margin: 0;
-  padding: 0;
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: linear-gradient(#7ec850, #3b8f3b);
   font-family: Arial, sans-serif;
-  touch-action: manipulation;
-}
-
-.game {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  text-align: center;
+  background: linear-gradient(#7cc84a, #3d8b2f);
+  color: white;
   overflow: hidden;
 }
 
-.title {
-  position: absolute;
-  top: 24px;
-  width: 100%;
-  text-align: center;
-  color: white;
-  text-shadow: 0 3px 8px rgba(0,0,0,0.45);
-  z-index: 5;
-  padding: 0 16px;
+h1 {
+  margin-top: 30px;
+  font-size: 2.5em;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
 
-.title h1 {
-  font-size: 34px;
+p {
+  opacity: 0.9;
 }
 
-.title p {
-  margin-top: 6px;
-  font-size: 16px;
-}
-
-.sloth {
-  position: absolute;
-  width: 150px;
-  left: 50%;
-  top: 110px;
-  transform: translateX(-50%);
+#sloth {
+  width: 220px;
+  margin-top: 40px;
+  transition: transform 0.4s ease;
   cursor: pointer;
-  user-select: none;
-  -webkit-user-drag: none;
-  z-index: 3;
 }
 
-.sloth.ready {
-  animation: hang 2s ease-in-out infinite;
-}
-
-@keyframes hang {
-  0%, 100% { transform: translateX(-50%) rotate(-3deg); }
-  50% { transform: translateX(-50%) rotate(3deg); }
-}
-
-.sloth.falling {
-  animation: fall 1s ease-in forwards;
-}
-
-@keyframes fall {
-  0% {
-    top: 110px;
-    transform: translateX(-50%) rotate(0deg);
-  }
-  100% {
-    top: calc(100vh - 185px);
-    transform: translateX(-50%) rotate(360deg);
-  }
-}
-
-.sloth.landed {
-  top: calc(100vh - 185px);
-  animation: bonk 0.35s ease;
-}
-
-@keyframes bonk {
-  0% { transform: translateX(-50%) scale(1.05, 0.9); }
-  50% { transform: translateX(-50%) scale(0.95, 1.08); }
-  100% { transform: translateX(-50%) scale(1, 1); }
-}
-
-.ground {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 90px;
-  background: #2d5f2d;
-  border-top: 8px solid #1f3d1f;
-  z-index: 2;
-}
-
-.button {
-  position: absolute;
-  bottom: 115px;
+button {
+  position: fixed;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 14px 22px;
+  padding: 16px 40px;
+  font-size: 20px;
+  border-radius: 40px;
   border: none;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #244524;
-  font-size: 18px;
-  font-weight: bold;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
-  z-index: 6;
-  cursor: pointer;
+  background: #e6e6e6;
+  color: #2e5d2a;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
-.button:active {
-  transform: translateX(-50%) scale(0.96);
+button:active {
+  transform: translateX(-50%) scale(0.95);
 }
 </style>
 </head>
 
 <body>
-<div class="game">
 
-  <div class="title">
-    <h1>Shake a Sloth</h1>
-    <p>Tap the sloth or button. Chaos follows.</p>
-  </div>
+<h1>Shake a Sloth</h1>
+<p>Tap the sloth or button. Chaos follows.</p>
 
-  <img src="assets/sloth.png" class="sloth ready" id="sloth" alt="Sloth" />
+<img
+  id="sloth"
+  src="assets/sloth.png"
+  onclick="shakeSloth()"
+/>
 
-  <button class="button" id="shakeBtn">Shake!</button>
-
-  <div class="ground"></div>
-
-</div>
+<button onclick="resetSloth()">Again!</button>
 
 <script>
 const sloth = document.getElementById("sloth");
-const shakeBtn = document.getElementById("shakeBtn");
 
+// preload sounds so they hit instantly
 const fallSound = new Audio("assets/fall.mp3");
 const impactSound = new Audio("assets/Impact.mp3");
 
-fallSound.volume = 0.55;
-impactSound.volume = 0.7;
+function shakeSloth() {
+  // random direction for chaos
+  const x = (Math.random() - 0.5) * 200;
+  const rotation = (Math.random() - 0.5) * 120;
 
-let isFalling = false;
-let isLanded = false;
+  sloth.style.transform = `translate(${x}px, 350px) rotate(${rotation}deg)`;
 
-function playSound(sound) {
-  sound.currentTime = 0;
-  sound.play().catch(() => {});
-}
+  // play sounds
+  fallSound.currentTime = 0;
+  impactSound.currentTime = 0;
 
-function dropSloth() {
-  if (isFalling) return;
-
-  if (isLanded) {
-    resetSloth();
-    return;
-  }
-
-  isFalling = true;
-
-  sloth.classList.remove("ready", "landed");
-  sloth.classList.add("falling");
-
-  playSound(fallSound);
-
+  fallSound.play();
   setTimeout(() => {
-    sloth.classList.remove("falling");
-    sloth.classList.add("landed");
+    impactSound.play();
+  }, 200);
 
-    playSound(impactSound);
-
-    isFalling = false;
-    isLanded = true;
-    shakeBtn.textContent = "Again!";
-  }, 1000);
+  // screen shake effect
+  document.body.style.animation = "shake 0.3s";
+  setTimeout(() => {
+    document.body.style.animation = "";
+  }, 300);
 }
 
 function resetSloth() {
-  sloth.classList.remove("falling", "landed");
-  sloth.style.top = "110px";
-
-  void sloth.offsetWidth;
-
-  sloth.classList.add("ready");
-
-  isLanded = false;
-  shakeBtn.textContent = "Shake!";
+  sloth.style.transform = "translate(0, 0) rotate(0)";
 }
 
-shakeBtn.addEventListener("click", dropSloth);
-sloth.addEventListener("click", dropSloth);
-
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" || e.code === "Enter") {
-    dropSloth();
+// mobile shake support (if they literally shake phone)
+window.addEventListener("devicemotion", (event) => {
+  if (event.accelerationIncludingGravity.x > 15) {
+    shakeSloth();
   }
 });
+
+// screen shake keyframes
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes shake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(5px, -5px); }
+  50% { transform: translate(-5px, 5px); }
+  75% { transform: translate(5px, 5px); }
+  100% { transform: translate(0, 0); }
+}`;
+document.head.appendChild(style);
 </script>
 
 </body>
